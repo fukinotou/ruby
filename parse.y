@@ -71,6 +71,7 @@ enum lex_state_e {
     EXPR_CLASS,			/* immediate after `class', no here document. */
     EXPR_VALUE,			/* alike EXPR_BEG but label is disallowed. */
     EXPR_PLUS,
+    EXPR_MINUS,
     EXPR_MAX_STATE
 };
 
@@ -207,6 +208,7 @@ struct parser_params {
     NODE *parser_lex_strterm;
     enum lex_state_e parser_lex_state;
     int parser_plus_count;
+    int parser_minus_count;
     stack_type parser_cond_stack;
     stack_type parser_cmdarg_stack;
     int parser_class_nest;
@@ -284,6 +286,7 @@ static int parser_yyerror(struct parser_params*, const char*);
 #define lex_strterm		(parser->parser_lex_strterm)
 #define lex_state		(parser->parser_lex_state)
 #define plus_count		(parser->parser_plus_count)
+#define minus_count		(parser->parser_minus_count)
 #define cond_stack		(parser->parser_cond_stack)
 #define cmdarg_stack		(parser->parser_cmdarg_stack)
 #define class_nest		(parser->parser_class_nest)
@@ -6642,6 +6645,13 @@ parser_yylex(struct parser_params *parser)
         return tINTEGER;
     }
 
+    if(lex_state == EXPR_MINUS)
+    {
+        lex_state = EXPR_BEG;
+        set_yylval_literal(LONG2FIX(minus_count));
+        return tINTEGER;
+    }
+
     if (lex_strterm) {
 	int token;
 	if (nd_type(lex_strterm) == NODE_HEREDOC) {
@@ -7748,6 +7758,21 @@ parser_yylex(struct parser_params *parser)
             pushback(c);
 
             lex_state = EXPR_PLUS;
+            return tOP_ASGN;
+        }
+
+	if(c == '-')
+        {
+            set_yylval_id('-');
+            minus_count = 1;
+            while((c = nextc()) == '-')
+            {
+                minus_count++;
+            }
+
+            pushback(c);
+
+            lex_state = EXPR_MINUS;
             return tOP_ASGN;
         }
 
