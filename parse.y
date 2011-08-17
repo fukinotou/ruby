@@ -6641,14 +6641,14 @@ parser_yylex(struct parser_params *parser)
     if(lex_state == EXPR_PLUS)
     {
         lex_state = EXPR_BEG;
-        set_yylval_literal(LONG2FIX(plus_count));
+        set_yylval_literal(LONG2FIX(1));
         return tINTEGER;
     }
 
     if(lex_state == EXPR_MINUS)
     {
         lex_state = EXPR_BEG;
-        set_yylval_literal(LONG2FIX(minus_count));
+        set_yylval_literal(LONG2FIX(1));
         return tINTEGER;
     }
 
@@ -7113,6 +7113,11 @@ parser_yylex(struct parser_params *parser)
 	    lex_state = EXPR_BEG;
 	    return tOP_ASGN;
 	}
+	if (c == '+'){
+	    set_yylval_id('+');
+            lex_state = EXPR_PLUS;
+	    return tOP_ASGN;
+	}
 	if (IS_BEG() || (IS_SPCARG(c) && arg_ambiguous())) {
 	    lex_state = EXPR_BEG;
 	    pushback(c);
@@ -7142,6 +7147,11 @@ parser_yylex(struct parser_params *parser)
 	    lex_state = EXPR_BEG;
 	    return tOP_ASGN;
 	}
+	if (c == '-'){
+            set_yylval_id('-');
+            lex_state = EXPR_MINUS;
+            return tOP_ASGN;
+        }
 	if (c == '>') {
 	    lex_state = EXPR_ARG;
 	    return tLAMBDA;
